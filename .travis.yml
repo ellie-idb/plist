@@ -8,10 +8,9 @@ d:
 
 os:
     - linux
-    - osx
     
 install:
-    - wget -q -O - "http://bit.ly/Doveralls" | bash
+    - wget -q "http://bit.ly/Doveralls" -O - | bash
     - chmod +x doveralls
 
 script:
