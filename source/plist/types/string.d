@@ -3,17 +3,20 @@ import plist.types.element;
 
 class PlistElementString : PlistElement {
     void instantiate(DOMEntity!string entity) {
-        if(_entity.name == "key") {
+        if(entity.name == "key") {
             key = true;
         }
+
         _entity = entity;
         if (entity.type == EntityType.elementEmpty) return; 
+        if (entity.children.length == 0) return;
+
         if(entity.children.length == 1) {
             if (entity.children[0].type != EntityType.text)
                 throw new PlistParsingException("Expected a text element after string\n");
             _text = entity.children[0].text;
         } else {
-            assert(entity.children.length == 0);
+            throw new PlistParsingException("Expected only one child under the string\n");
         }
     }
 

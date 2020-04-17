@@ -11,16 +11,16 @@ class PlistElementDate : PlistElement {
         if (entity.children.length == 1) {
             if (entity.children[0].type != EntityType.text)
                 throw new PlistParsingException("Expected a text element after date\n");
-            _date = DateTime.fromISOExtString(entity.children[0].text);
+            _date = SysTime.fromISOExtString(entity.children[0].text);
         }
     }
 
-    @property DateTime value() {
+    @property SysTime value() {
         return _date;
     }
 
-    @property DateTime value(DateTime newDate) {
-        newDate = _date;
+    @property SysTime value(SysTime newDate) {
+        _date = newDate;
         return _date;
     }
 
@@ -43,6 +43,6 @@ class PlistElementDate : PlistElement {
 
     private {
         DOMEntity!string _entity;
-        DateTime _date;
+        SysTime _date;
     }
 }

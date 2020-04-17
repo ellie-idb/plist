@@ -15,7 +15,7 @@ bool validateDataType(DOMEntity!string _entity) {
 
 PlistElement coerce(T)(DOMEntity!string _entity) {
     auto element = new T(); // object creation needed because type() cannot be static
-    if (_entity.name != "true" && _entity.name != "false") { // booleans are the exception, <bool>false</bool> is just <false/>
+    if (_entity.name != "true" && _entity.name != "false" && _entity.name != "key") { // booleans are the exception, <bool>false</bool> is just <false/>
         assert(_entity.name == element.type(), "Entity name " ~ _entity.name ~ " did not match " ~ element.type());
     }
 

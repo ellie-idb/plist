@@ -36,9 +36,13 @@ class PlistElementData : PlistElement {
 
     void write(ref XMLWriter!(Appender!string) writer) {
         writer.openStartTag("data");
-        writer.closeStartTag();
-        writer.writeText(Base64.encode(_data), Newline.no);
-        writer.writeEndTag("data", Newline.no);
+        if (_data.length == 0) {
+            writer.closeStartTag(EmptyTag.yes);
+        } else {
+            writer.closeStartTag();
+            writer.writeText(Base64.encode(_data), Newline.no);
+            writer.writeEndTag("data", Newline.no);
+        }
     }
 
     private {
