@@ -10,7 +10,7 @@ os:
     - linux
     
 install:
-    - wget -q "http://bit.ly/Doveralls" -O - | bash
+    - curl -L "http://bit.ly/Doveralls" | bash
     - chmod +x doveralls
 
 script:
