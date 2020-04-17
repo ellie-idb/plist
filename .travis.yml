@@ -8,11 +8,7 @@ d:
 
 os:
     - linux
-    
-install:
-    - curl -L "http://bit.ly/Doveralls" | bash
-    - chmod +x doveralls
 
 script:
     - dub test --build=unittest-cov --compiler=${DC}
-    - ./doveralls -travis-pro
+    - dub run doveralls -- -travis-pro
