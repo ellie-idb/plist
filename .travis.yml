@@ -1,0 +1,14 @@
+sudo: false
+language: d
+d:
+    - dmd
+    - dmd-nightly
+    - ldc
+    - ldc-beta
+
+os:
+    - linux
+    - osx
+
+script:
+    - dub test --build=unittest-cov --compiler=${DC}
