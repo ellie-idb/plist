@@ -11,4 +11,5 @@ os:
 
 script:
     - dub test --build=unittest-cov --compiler=${DC}
+    - dub fetch doveralls
     - dub run doveralls -- -travis-pro
