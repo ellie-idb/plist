@@ -1,0 +1,8 @@
+{
+	"fileVersion": 1,
+	"versions": {
+		"dxml": "0.4.1",
+		"std-experimental-xml": "0.1.7",
+		"stdx-allocator": "2.77.5"
+	}
+}

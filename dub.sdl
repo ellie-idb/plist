@@ -1,0 +1,7 @@
+name "plist"
+description "A lightweight library to parse Apple's property list format"
+authors "Harrison Ford (@hatf0)"
+copyright "Copyright © 2020, Harrison Ford"
+license "proprietary"
+dependency "dxml" version="~>0.4.1"
+targetType "library"

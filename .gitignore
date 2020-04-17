@@ -1,0 +1,17 @@
+.dub
+docs.json
+__dummy.html
+docs/
+/plist_buddy
+plist-test-library
+libplist.a
+plist_buddy.so
+plist_buddy.dylib
+plist_buddy.dll
+plist_buddy.a
+plist_buddy.lib
+plist_buddy-test-*
+*.exe
+*.o
+*.obj
+*.lst
