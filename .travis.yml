@@ -9,6 +9,11 @@ d:
 os:
     - linux
     - osx
+    
+install:
+    - wget -q -O - "http://bit.ly/Doveralls" | bash
+    - chmod +x doveralls
 
 script:
     - dub test --build=unittest-cov --compiler=${DC}
+    - ./doveralls -travis-pro
