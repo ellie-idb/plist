@@ -304,5 +304,139 @@ unittest {
           dict.coerceToNative!DeserdeTest_12(obj);
 
           assert(obj.array.length == 2);
+
+          assert(obj.array[0].type() == "string");
+
+          assert(obj.array[1].type() == "bool");
     }
+    /* Deserialize arrays (type 2)  */
+    {
+        struct DeserdeTest_13 {
+            @PlistKey("Hello") long hello;
+            @PlistKey("Bar") @PlistOptional long bar;
+        }
+        struct DeserdeTest_14 {
+            @PlistKey("Foo") DeserdeTest_13[] bar;
+        }
+          string xml = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+    <dict>
+        <key>Foo</key>
+        <array>
+            <dict>
+                <key>Bar</key>
+                <integer>420</integer>
+                <key>Hello</key>
+                <integer>1337</integer>
+            </dict>
+        </array>
+    </dict>
+</plist>`;
+          Plist parse = new Plist();
+          parse.read(xml);
+          assert(parse.length == 1, "Expected length of 1");
+          assert(parse.write() == xml, "Writing doesn't output the same what we put in");
+          assert(parse[0].type() == PlistElementType.PLIST_ELEMENT_DICT, "Expected dict at index 0");
+
+          PlistElementDict dict = cast(PlistElementDict)parse[0];
+
+          DeserdeTest_14 obj;
+          dict.coerceToNative!DeserdeTest_14(obj);
+          assert(obj.bar.length == 1, "Expected length of 1");
+          assert(obj.bar[0].hello == 1337, "Expected different value");
+          assert(obj.bar[0].bar == 420, "expected diff value");
+    }
+    /* Deserialize data as a static array */
+    {
+        struct DeserdeTest_15 {
+            @PlistKey("Hello") ubyte[8] hi;
+        }
+          string xml = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+    <dict>
+        <key>Hello</key>
+        <data>Q3B1MElzdAA=</data>
+    </dict>
+</plist>`;
+          Plist parse = new Plist();
+          parse.read(xml);
+          assert(parse.length == 1, "Expected length of 1");
+          assert(parse.write() == xml, "Writing doesn't output the same what we put in");
+          assert(parse[0].type() == PlistElementType.PLIST_ELEMENT_DICT, "Expected dict at index 0");
+
+          PlistElementDict dict = cast(PlistElementDict)parse[0];
+
+          DeserdeTest_15 obj;
+
+          dict.coerceToNative!DeserdeTest_15(obj);
+    }
+    /* Deserialize data as a dynamic array */
+    {
+        struct DeserdeTest_16 {
+            @PlistKey("Hello") ubyte[] hi;
+        }
+          string xml = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+    <dict>
+        <key>Hello</key>
+        <data>Q3B1MElzdAA=</data>
+    </dict>
+</plist>`;
+          Plist parse = new Plist();
+          parse.read(xml);
+          assert(parse.length == 1, "Expected length of 1");
+          assert(parse.write() == xml, "Writing doesn't output the same what we put in");
+          assert(parse[0].type() == PlistElementType.PLIST_ELEMENT_DICT, "Expected dict at index 0");
+
+          PlistElementDict dict = cast(PlistElementDict)parse[0];
+
+          DeserdeTest_16 obj;
+
+          dict.coerceToNative!DeserdeTest_16(obj);
+
+          assert(obj.hi.length == 8);
+    }
+    /* Deserialize data as a dynamic array WITHIN an array */
+    /* Arrayception */
+    {
+        struct DeserdeTest_17 {
+            @PlistKey("Hello") ubyte[] hi;
+        }
+
+        struct DeserdeTest_18 {
+            @PlistKey("Arrays") DeserdeTest_17[] arrays;
+        }
+          string xml = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+    <dict>
+        <key>Arrays</key>
+        <array>
+            <dict>
+                <key>Hello</key>
+                <data>Q3B1MElzdAA=</data>
+            </dict>
+        </array>
+    </dict>
+</plist>`;
+          Plist parse = new Plist();
+          parse.read(xml);
+          assert(parse.length == 1, "Expected length of 1");
+          assert(parse.write() == xml, "Writing doesn't output the same what we put in");
+          assert(parse[0].type() == PlistElementType.PLIST_ELEMENT_DICT, "Expected dict at index 0");
+
+          PlistElementDict dict = cast(PlistElementDict)parse[0];
+
+          DeserdeTest_18 obj;
+
+          dict.coerceToNative!DeserdeTest_18(obj);
+
+          assert(obj.arrays.length == 1);
+          assert(obj.arrays[0].hi.length == 8);
+    }
+
+
 }

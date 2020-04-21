@@ -109,11 +109,34 @@ class PlistElementDict : PlistElement {
                                 throw new PlistSerdeException("Field " ~ field_names[i] ~ " was not coercible to a " ~ element.type);
                             }
                         } else if (element.type == "array") {
+                            import std.range.primitives;
+                            import std.datetime : SysTime;
                             static if (is(typeof(F) == PlistElementArray)) {
                                 mixin ("obj." ~ field_names[i] ~ " = cast(PlistElementArray)element;");
                                 return true; // strange that I have to bail out here
                             }
-                            else {
+                            else static if (isArray!(typeof(F)) 
+                                            && isDynamicArray!(typeof(F)) 
+                                            && is(ElementType!(typeof(F)) == struct)
+                                            && !is(ElementType!(typeof(F)) == SysTime)) {
+                                PlistElementArray arr = cast(PlistElementArray)element;
+                                PlistElement[] elements = arr.entries();
+                                /* Reset the length of the array to 0 */
+                                mixin("obj." ~ field_names[i] ~ ".length = 0;");
+                                bool passed = true;
+                                foreach(e; elements) {
+                                    /* If it's not a dict, ignore it */
+                                    if (e.type() == "dict") {
+                                        PlistElementDict wrappedDict = cast(PlistElementDict)e;
+                                        mixin("obj." ~ field_names[i] ~ ".length++;");
+                                        passed = wrappedDict.coerceToNative!(ElementType!(typeof(F)))(
+                                                mixin("obj." ~ field_names[i] ~ "[$ - 1]")); 
+                                        if (!passed)
+                                            return passed;
+                                    }
+                                }
+                                return passed;
+                            } else {
                                 throw new PlistSerdeException("Field " ~ field_names[i] ~ " was not coercible to a " ~ element.type);
                             }
                         }
@@ -134,13 +157,15 @@ class PlistElementDict : PlistElement {
                     else {
                         static if (hasUDA!(F, PlistOptional)) {
                             return true;
+                        } else {
+                            throw new PlistSerdeException("Missing field " ~ key);
                         }
-                        throw new PlistParsingException("Missing field " ~ key);
                     }
                 } else {
                     return true;
                 }
 
+                // catch-all
                 return false;
             }();
 
