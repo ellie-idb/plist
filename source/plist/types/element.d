@@ -8,7 +8,7 @@ struct PlistKey {
     string key;
 }
 
-enum TranslateDict;
+enum PlistOptional;
 
 enum PlistElementType {
   PLIST_ELEMENT_DATA = "data",

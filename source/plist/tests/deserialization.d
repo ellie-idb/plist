@@ -109,7 +109,14 @@ unittest {
 
           DeserdeTest_4 obj;
 
-          assert(!dict.coerceToNative!DeserdeTest_4(obj), "Should NOT deserialize");
+          bool failed = false;
+          try {
+              dict.coerceToNative!DeserdeTest_4(obj);
+          } catch (PlistSerdeException e) {
+              failed = true;
+          }
+
+          assert(failed, "Should NOT deserialize");
 
           assert(obj.hi == 0, "Expected different result from deserialization");
     }
@@ -258,7 +265,15 @@ unittest {
 
           DeserdeTest_11 obj;
 
-          assert(!dict.coerceToNative!DeserdeTest_11(obj), "Should've failed");
+          bool failed = false;
+          try {
+            dict.coerceToNative!DeserdeTest_11(obj);
+          } catch(PlistSerdeException e) {
+              failed = true;
+          }
+
+
+          assert(failed, "Should've failed");
     }
     /* Deserialize arrays */
     {
