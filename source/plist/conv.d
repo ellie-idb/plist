@@ -1,7 +1,51 @@
 module plist.conv;
 import plist.types;
 import dxml.dom;
-import std.traits : EnumMembers;
+import std.traits : EnumMembers, isAssignable;
+
+bool typeIsCoercible(T)(PlistElementType type) {
+    // Can't avoid boilerplate here, as we need to hardcode the actual element types
+    if (type == PlistElementType.PLIST_ELEMENT_DATA) {
+        if (isAssignable!(T, ubyte[])) {
+            return true;
+        }
+    } 
+
+    if (type == PlistElementType.PLIST_ELEMENT_STRING || 
+        type == PlistElementType.PLIST_ELEMENT_KEY) {
+        if (isAssignable!(T, string)) {
+            return true;
+        }
+    }
+
+    if (type == PlistElementType.PLIST_ELEMENT_DATE) {
+        import std.datetime : SysTime;
+        if (isAssignable!(T, SysTime)) {
+            return true;
+        } 
+    }
+
+    if (type == PlistElementType.PLIST_ELEMENT_BOOLEAN_TRUE || 
+        type == PlistElementType.PLIST_ELEMENT_BOOLEAN_FALSE) {
+        if (isAssignable!(T, bool)) {
+            return true;
+        }
+    }
+
+    if (type == PlistElementType.PLIST_ELEMENT_INTEGER) {
+        if (isAssignable!(T, long)) {
+            return true;
+        }
+    }
+
+    if (type == PlistElementType.PLIST_ELEMENT_REAL) {
+        if (is(T == real)) {
+            return true;
+        }
+    }
+
+    return false;
+}
 
 bool validateDataType(DOMEntity!string _entity) {
     import std.algorithm.searching;
@@ -31,19 +75,29 @@ PlistElement coerceRuntime(PlistElementType type, DOMEntity!string _entity) {
 
     PlistElement element;
 
+
     static foreach(etype; [EnumMembers!PlistElementType]) {
-        if (type == etype) {
-            static if (etype == PlistElementType.PLIST_ELEMENT_BOOLEAN_TRUE || etype == PlistElementType.PLIST_ELEMENT_BOOLEAN_FALSE) {
-                element = coerce!(PlistElementBoolean)(_entity); // again, bypass logic for booleans
-            } else static if (etype == PlistElementType.PLIST_ELEMENT_KEY) {
-                element = coerce!(PlistElementString)(_entity); // a key is just a string
-            } else {
-                import std.string : capitalize;
-                // this is generated at compile time to avoid boilerplate 
-                mixin("element = coerce!(PlistElement" ~ capitalize(cast(string)etype) ~ ")(_entity);"); 
-            }
+        if (type == etype) { // Check has to be done at runtime 
+            mixin("element = coerce!(" ~ getElementClassFromType(etype) ~ ")(_entity);");
         }
     }
 
     return element;
+}
+
+auto getElementClassFromType(PlistElementType type) {
+    static foreach(etype; [EnumMembers!PlistElementType]) {
+        if (type == etype) {
+            static if (etype == PlistElementType.PLIST_ELEMENT_BOOLEAN_TRUE || etype == PlistElementType.PLIST_ELEMENT_BOOLEAN_FALSE) {
+                return "PlistElementBoolean";
+            } else static if (etype == PlistElementType.PLIST_ELEMENT_KEY) {
+                return "PlistElementString";
+            } else {
+                import std.string : capitalize;
+                return "PlistElement" ~ capitalize(cast(string)etype);
+            }
+        }
+    }
+    
+    assert(0, "Should never reach this point");
 }

@@ -46,6 +46,104 @@ class PlistElementDict : PlistElement {
         }
         assert(0);
     }
+        
+
+    /* 
+       Only return true if we were able to fill all members of the field
+    */
+
+    // Complexity is infinity
+    bool coerceToNative(T)(ref T obj) {
+        import std.traits;
+        enum field_names = FieldNameTuple!T;
+        import plist.conv;
+        import plist.types;
+        // This static foreach lets us go over all fields defined in the struct
+        bool fail = false;
+        static foreach(i, field; Fields!T) {
+            // We have to wrap this entire thing within a lambda
+            // and potentially make execution flow go ALL over the
+            // damn place, since alias is global, but within a lambda
+            // it isn't...
+            fail = () {
+                // IF and only if the programmer has defined the corresponding key within the plist, proceed
+                mixin("alias F = T." ~ field_names[i] ~ ";");
+                static if (hasUDA!(F, PlistKey)) {
+                    // There should ONLY be one mapping to a Plist value
+                    static assert(getUDAs!(F, PlistKey).length == 1, "Cannot have more then one key to deserialize");
+                    static string key = getUDAs!(F, PlistKey)[0].key;
+                    // Do this check at runtime, since we populate the dict at runtime (and have no prior knowledge
+                    auto results = _entries.keys.find(key);
+                    if (!results.empty) {
+                        PlistElement element = _entries[key];
+                        // And ensure that the type that they want us to convert to (within the struct) is actually compatible
+                        // for example, PlistElementType.PLIST_ELEMENT_DATE to std.datetime.SysTime,
+                        // PlistElementType.PLIST_ELEMENT_STRING to "string", etc
+                        // SINCE the type field is defined at runtime,
+                        // we have to do this weird hack in order to get it to be compile-time
+                        // where we generate a MASSIVE branch comparing types
+
+                        // As well, we have to check if it's a boolean,
+                        // since for some GOD awful reason, true/false is
+                        // defined as it's own type -_-
+                        if (element.type == "bool") {
+                            // Hack to ensure compilers don't try to cast every field to a boolean
+                            static if (typeIsCoercible!field(PlistElementType.PLIST_ELEMENT_BOOLEAN_TRUE)) {
+                                enum type = "PlistElementBoolean";
+                                mixin (type ~ " val = cast(" ~ type ~ ")element;"); 
+                                mixin ("obj." ~ field_names[i] ~ " = val.value;");
+                                return true;
+                            }
+                            else {
+                                return false;
+                            }
+                        } else if (element.type == "dict") {
+                            import std.datetime : SysTime;
+                            // God have mercy on my soul for this
+                            // SysTime is also a dict, but we need to ignore it
+                            static if (is(typeof(F) == struct) && !is(typeof(F) == SysTime)) { 
+                                // Now recurse!
+                                PlistElementDict wrappedDict = cast(PlistElementDict)element;
+                                return wrappedDict.coerceToNative!(typeof(F))(mixin("obj." ~ field_names[i])); 
+                            }
+                        } else if (element.type == "array") {
+                            static if (is(typeof(F) == PlistElementArray)) {
+                                mixin ("obj." ~ field_names[i] ~ " = cast(PlistElementArray)element;");
+                            }
+                            else {
+                                return false;
+                            }
+                        }
+
+                        static foreach(etype; [EnumMembers!PlistElementType]) {
+                            if (element.type == etype) { // Implicit that element.type will never be bool here
+                                static if (typeIsCoercible!field(etype)) {
+                                    enum type = getElementClassFromType(etype);
+                                    mixin (type ~ " val = cast(" ~ type ~ ")element;"); 
+                                    mixin ("obj." ~ field_names[i] ~ " = val.value;");
+                                    return true; // Jump out of the massive branch quicker
+                                } else {
+                                    return false;
+                                }
+                            }
+                        }
+                    }
+                    else {
+                        return false;
+                    }
+                } else {
+                    return true;
+                }
+
+                return false;
+            }();
+
+            if (!fail) // Jump out quick, in case one field wasn't able to deserialize, followed by one that WAS
+                return fail;
+        }
+        return fail;
+    }
+
 
     @property string[] keys() {
         auto keys = _entries.keys.sort!("a.toLower() < b.toLower()")();

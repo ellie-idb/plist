@@ -4,6 +4,12 @@ public import dxml.dom;
 public import dxml.writer;
 public import std.range : Appender;
 
+struct PlistKey {
+    string key;
+}
+
+enum TranslateDict;
+
 enum PlistElementType {
   PLIST_ELEMENT_DATA = "data",
   PLIST_ELEMENT_STRING = "string",
