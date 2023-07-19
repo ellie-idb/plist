@@ -8,7 +8,7 @@ import plist.conv;
 class Plist {
     bool read(string input) {
         import std.stdio;
-        auto dom = parseDOM(input);
+        auto dom = parseDOM!simpleXML(input);
 
         auto root = dom.children[0];
         { 
