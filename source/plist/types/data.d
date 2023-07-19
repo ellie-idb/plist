@@ -1,6 +1,7 @@
 module plist.types.data;
 import plist.types.element;
 import std.base64;
+import std.string;
 
 class PlistElementData : PlistElement {
     void instantiate(DOMEntity!string entity) {
@@ -10,7 +11,7 @@ class PlistElementData : PlistElement {
         if (entity.children.length != 1)
             return;
         if (entity.children[0].type == EntityType.text) {
-            auto encoded = entity.children[0].text;
+            auto encoded = entity.children[0].text.strip();
             if (encoded.length != 0) 
                 _data = Base64.decode(encoded); 
         }
